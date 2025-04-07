@@ -2,6 +2,7 @@ import os
 import argparse
 import json
 from elevenlabs.client import ElevenLabs
+import time
 
 class ConversationManager:
     def __init__(self, api_key=None):
@@ -100,17 +101,39 @@ class ConversationManager:
                 # Access attributes directly instead of using .get()
                 role = "User" if hasattr(entry, 'role') and entry.role == 'user' else "Agent"
                 message = entry.message if hasattr(entry, 'message') else '[message missing]'
-                history.append(f"{role}: {message}")
+                # Attempt to get timestamp - adjust 'timestamp' attribute name if needed based on API response structure
+                timestamp_str = ""
+                if hasattr(entry, 'timestamp'):
+                    # Format the timestamp nicely if it exists (e.g., ISO format, local time)
+                    # This is a placeholder - actual formatting depends on the timestamp data type
+                    try:
+                        timestamp_str = f"[{entry.timestamp}] " 
+                    except Exception:
+                        timestamp_str = "[timestamp error] " # Handle potential formatting errors
+                
+                history.append(f"{timestamp_str}{role}: {message}")
             
             # Determine filename
+            conversation_dir = "conversations"
+            os.makedirs(conversation_dir, exist_ok=True) # Ensure directory exists
+            
             if not filename:
-                filename = f"conversation_{conversation_id}.txt"
+                # Use a timestamp for more robust naming
+                timestamp = time.strftime("%Y%m%d_%H%M%S")
+                base_filename = f"conversation_{conversation_id}_{timestamp}.txt"
+            else:
+                # Ensure provided filename doesn't have path separators and ends with .txt
+                base_filename = os.path.basename(filename)
+                if not base_filename.endswith('.txt'):
+                    base_filename += '.txt'
+            
+            full_path = os.path.join(conversation_dir, base_filename)
             
             # Write to file
-            with open(filename, 'w', encoding='utf-8') as f:
+            with open(full_path, 'w', encoding='utf-8') as f:
                 f.write('\n'.join(history))
             
-            print(f"Conversation successfully saved to {filename}")
+            print(f"Conversation successfully saved to {full_path}")
             return True
             
         except Exception as e:
