@@ -96,8 +96,8 @@ The system captures conversations, analyzes transcripts for emotional cues and t
     ```
 3.  **Install dependencies:**
     ```bash
-    pip install -r requirements.txt
-    ```
+   pip install -r requirements.txt
+   ```
 4.  **Create `.env` file:** Create a file named `.env` in the project root and add your API keys and Agent ID:
     ```dotenv
     AGENT_ID=your_elevenlabs_agent_id
