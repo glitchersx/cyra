@@ -1,1 +1,1 @@
-# cyra
+Cyra :  Your AI Companion 
