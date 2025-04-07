@@ -13,7 +13,7 @@ class ConversationManager:
         """
         # Try to get API key from environment if not provided
         if api_key is None:
-            api_key = os.getenv("ELEVENLABS_API_KEY1") or os.getenv("ELEVENLABS_API_KEY2")
+            api_key = os.getenv("ELEVENLABS_API_KEY") or os.getenv("ELEVENLABS_API_KEY2")
             if not api_key:
                 raise ValueError("API key not provided and not found in environment variables")
         

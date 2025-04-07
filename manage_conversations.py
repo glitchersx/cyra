@@ -9,7 +9,7 @@ def print_separator():
 def main():
     """Demonstrate conversation management features."""
     # Get API key from environment
-    api_key = os.getenv("ELEVENLABS_API_KEY1") or os.getenv("ELEVENLABS_API_KEY2")
+    api_key = os.getenv("ELEVENLABS_API_KEY") or os.getenv("ELEVENLABS_API_KEY2")
     
     if not api_key:
         print("Error: No API key found in environment variables.")

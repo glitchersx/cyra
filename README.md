@@ -32,47 +32,52 @@ The system captures conversations, analyzes transcripts for emotional cues and t
 /
 |-- conversations/          # Saved conversation transcripts (.txt)
 |-- user_profiles/          # Generated user profiles (.json)
+|-- src/                    # Source code directory
+|   |-- __init__.py         # Makes src a Python package
+|   |-- agent.py            # Main script: Runs the conversation, triggers post-processing
+|   |-- emotion_analysis.py # Basic sentiment analysis (TextBlob) & escalation check
+|   |-- coping_strategies.py# Provides advice based on basic sentiment
+|   |-- analyzer_agent.py   # LLM analysis using Groq API, saves JSON profiles
+|   |-- knowledge_uploader.py# Formats profiles & uploads them to ElevenLabs KB
+|   |-- mood_tracker.py     # Analyzes historical profiles, provides API endpoint, generates graph
+|   |-- scheduler.py        # (Optional) Alternative script for scheduled analysis/uploads
+|   |-- sync_user_profile.py# (Optional) Alternative script for scheduled KB sync
+|   |-- watcher_processor.py# (NEW) A separate, long-running script that periodically checks the ElevenLabs API for new conversations
+|   |-- demo_full_loop.py   # (REVISED) A script specifically for demonstrating the *live* conversation part
+|   |-- processed_conversation_ids.txt# (NEW) Automatically created by watcher_processor.py to store the IDs of conversations that have already been processed, preventing duplicates
 |-- .env                    # Environment variables (API keys, Agent ID)
-|-- agent.py                # Main script: Runs the conversation, triggers post-processing
-|-- emotion_analysis.py     # Basic sentiment analysis (TextBlob) & escalation check
-|-- coping_strategies.py    # Provides advice based on basic sentiment
-|-- conversation_manager.py # (Deprecated/Integrated) Original transcript saving logic
-|-- analyzer_agent.py       # LLM analysis using Groq API, saves JSON profiles
-|-- knowledge_uploader.py   # Formats profiles & uploads them to ElevenLabs KB
-|-- mood_tracker.py         # Analyzes historical profiles, provides API endpoint, generates graph
-|-- scheduler.py            # (Optional) Alternative script for scheduled analysis/uploads
-|-- sync_user_profile.py    # (Optional) Alternative script for scheduled KB sync
 |-- requirements.txt        # Python dependencies
 |-- README.md               # This file
-|-- mood_evolution.png      # Generated mood graph (created by mood_tracker.py)
+|-- mood_evolution.png      # Generated mood graph (created by mood_tracker.py in project root)
 ```
 
 ## File Descriptions
 
-*   **`agent.py`**: The main entry point. Initializes and runs the ElevenLabs conversation. After the session ends, it retrieves the transcript, saves it, then calls `analyzer_agent.py` to generate a profile and `knowledge_uploader.py` to upload the profile.
-*   **`emotion_analysis.py`**: Contains functions using `TextBlob` to get basic sentiment and check for specific escalation keywords in user utterances during the live conversation.
-*   **`coping_strategies.py`**: Provides simple, pre-defined coping advice mapped to the basic sentiments detected by `emotion_analysis.py`.
-*   **`analyzer_agent.py`**: Takes a transcript file path, sends the content to the Groq API (Llama 3 70b model) with a specific prompt to extract structured user profile information (mood, topics, tags, summary), and saves this as a JSON file in `user_profiles/`.
-*   **`knowledge_uploader.py`**: Takes a generated user profile JSON file path, reads it, formats the content into readable text, and uploads this text to the configured ElevenLabs Conversational AI knowledge base using their API.
-*   **`mood_tracker.py`**: Loads all profiles from `user_profiles/`, calculates mood scores over time, generates comparative insights, flags potential degradation trends, creates a `mood_evolution.png` graph, and serves this information via a Flask API endpoint at `/mood-trends`.
-*   **`.env`**: Stores sensitive API keys and configuration (Agent ID, ElevenLabs API Key, Groq API Key). **Never commit this file to Git.**
+*   **`src/agent.py`**: The main entry point. Initializes and runs the ElevenLabs conversation. After the session ends, it retrieves the transcript, saves it, then calls functions from `analyzer_agent.py` and `knowledge_uploader.py`.
+*   **`src/emotion_analysis.py`**: Contains functions using `TextBlob` to get basic sentiment and check for specific escalation keywords.
+*   **`src/coping_strategies.py`**: Provides simple, pre-defined coping advice.
+*   **`src/analyzer_agent.py`**: Contains functions to analyze transcript using Groq API and save the profile JSON to `user_profiles/`.
+*   **`src/knowledge_uploader.py`**: Contains functions to format a profile JSON and upload it to the ElevenLabs knowledge base.
+*   **`src/mood_tracker.py`**: Flask app to analyze profiles in `user_profiles/`, generate `mood_evolution.png` (in the project root), and serve insights at `/mood-trends`.
+*   **`watcher_processor.py`**: (NEW) A separate, long-running script that periodically checks the ElevenLabs API for new conversations. When it finds one that hasn't been processed, it fetches the transcript, saves it, triggers the analysis (`src/analyzer_agent.py`), saves the profile, and uploads the profile to the KB (`src/knowledge_uploader.py`). It keeps track of processed IDs in `processed_conversation_ids.txt`.
+*   **`demo_full_loop.py`**: (REVISED) A script specifically for demonstrating the *live* conversation part. It runs the voice chat and shows real-time analysis, but **does not** handle post-conversation processing itself. It relies on `watcher_processor.py` for that.
+*   **`processed_conversation_ids.txt`**: (NEW) Automatically created by `watcher_processor.py` to store the IDs of conversations that have already been processed, preventing duplicates.
+*   **`.env`**: Stores sensitive API keys and configuration.
 *   **`requirements.txt`**: Lists all necessary Python packages.
 
-## Workflow
+## Workflow (Decoupled)
 
-1.  Run `python agent.py`.
-2.  Engage in a voice conversation with the ElevenLabs agent.
-3.  During the conversation, basic emotion/escalation analysis is performed and printed to the console.
-4.  End the conversation (Ctrl+C).
-5.  `agent.py` automatically fetches and saves the transcript to `conversations/`.
-6.  `agent.py` calls `analyzer_agent.py` to process the transcript:
-    *   Groq/Llama 3 analyzes the text.
-    *   A profile is saved to `user_profiles/`.
-7.  `agent.py` calls `knowledge_uploader.py` to process the new profile:
-    *   The profile JSON is formatted into text.
-    *   The text is uploaded to the ElevenLabs knowledge base.
-8.  (Separately) Run `python mood_tracker.py` to start the Flask server.
-9.  Access `http://localhost:5000/mood-trends` in a browser to see historical mood analysis and the generated graph (`mood_evolution.png`).
+1.  **Run the Watcher:** Start `python watcher_processor.py` in a terminal. It runs continuously in the background, checking for new conversations every minute (configurable).
+2.  **Run the Live Conversation:** Start `python demo_full_loop.py` (or `python src/agent.py`) in another terminal.
+3.  Engage in a voice conversation.
+4.  End the conversation (Ctrl+C). The demo/agent script finishes (it might show an `OSError` which is okay).
+5.  **Watcher Takes Over:** Within the next minute (or configured interval), `watcher_processor.py` will:
+    *   Detect the newly completed conversation via the API.
+    *   Fetch and save the transcript to `conversations/`.
+    *   Call the analysis function, saving a profile to `user_profiles/`.
+    *   Call the upload function, sending the profile to ElevenLabs KB.
+    *   Log the conversation ID to `processed_conversation_ids.txt`.
+6.  (Separately) Run `python src/mood_tracker.py` to start the Flask server for historical mood data, which reads from `user_profiles/`.
 
 ## Setup
 
@@ -91,8 +96,8 @@ The system captures conversations, analyzes transcripts for emotional cues and t
     ```
 3.  **Install dependencies:**
     ```bash
-    pip install -r requirements.txt
-    ```
+   pip install -r requirements.txt
+   ```
 4.  **Create `.env` file:** Create a file named `.env` in the project root and add your API keys and Agent ID:
     ```dotenv
     AGENT_ID=your_elevenlabs_agent_id
@@ -101,18 +106,28 @@ The system captures conversations, analyzes transcripts for emotional cues and t
     ```
     Replace the placeholder values with your actual credentials.
 
-## Running the System
+## Running the System (Decoupled)
 
-1.  **Run the Mood Tracker (Optional, for historical analysis):**
+**Important:** Run commands from the project root directory.
+
+1.  **Start the Watcher/Processor:**
     Open a terminal and run:
     ```bash
-    python mood_tracker.py
+    python watcher_processor.py
     ```
-    Keep this running. Access the data at `http://localhost:5000/mood-trends`.
+    Keep this script running in the background. It will automatically process conversations after they end.
 
-2.  **Run the Main Conversation Agent:**
+2.  **Start the Mood Tracker (Optional):**
     Open another terminal and run:
     ```bash
-    python agent.py
+    python src/mood_tracker.py
     ```
-    Start speaking. Press `Ctrl+C` to end the session and trigger the post-conversation analysis and upload workflow. 
+    Keep this running to access historical mood data via `http://localhost:5000/mood-trends`.
+
+3.  **Run the Live Conversation Demo:**
+    Open a *third* terminal and run:
+    ```bash
+    python demo_full_loop.py
+    ```
+    Have the conversation. Press `Ctrl+C` to end. The post-processing will be handled automatically by the watcher script running in the first terminal.
+    *(Alternatively, run `python src/agent.py` for the less verbose version).* 

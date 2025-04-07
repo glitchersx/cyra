@@ -3,7 +3,12 @@ import json
 import glob
 from datetime import datetime, timedelta
 from flask import Flask, jsonify
+
+# NEW: Set Matplotlib backend *before* importing pyplot
+import matplotlib
+matplotlib.use('Agg') # Use non-interactive backend
 import matplotlib.pyplot as plt
+
 import numpy as np
 
 app = Flask(__name__)
