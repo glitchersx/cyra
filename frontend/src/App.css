@@ -1,0 +1,64 @@
+.App {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.navbar-brand {
+  font-weight: bold;
+}
+
+.conversation-card {
+  transition: transform 0.2s;
+  cursor: pointer;
+  border-left: 4px solid #007bff;
+}
+
+.conversation-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.message-bubble {
+  padding: 10px 15px;
+  border-radius: 15px;
+  margin-bottom: 10px;
+  max-width: 80%;
+}
+
+.user-message {
+  background-color: #007bff;
+  color: white;
+  align-self: flex-end;
+  margin-left: auto;
+  border-bottom-right-radius: 3px;
+}
+
+.agent-message {
+  background-color: #f0f0f0;
+  color: #333;
+  align-self: flex-start;
+  border-bottom-left-radius: 3px;
+}
+
+.conversation-messages {
+  display: flex;
+  flex-direction: column;
+  padding: 15px;
+}
+
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.error-message {
+  color: #dc3545;
+  padding: 15px;
+  text-align: center;
+  background-color: #f8d7da;
+  border-radius: 4px;
+  margin: 15px 0;
+} 

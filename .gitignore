@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.env
+venv/
+.venv/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Generated Data
+conversations/
+user_profiles/
+processed_conversation_ids.txt
+mood_evolution.png
+
+# IDE / Editor specific
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sublime-project
+*.sublime-workspace
+
+# Python bytecode
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+dist/
+build/
+*.egg-info/
+
+# Local development settings
+.env
+
+# IDE specific files
+*.swp
+*.swo 
