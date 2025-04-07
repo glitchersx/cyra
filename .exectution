@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 python conversation_manager.py get T98nhVzNDUUL47EyDpyI
 python conversation_manager.py list
 
@@ -20,4 +21,28 @@ run manage_conversations.py to save as text
 
 
 
+=======
+python conversation_manager.py get T98nhVzNDUUL47EyDpyI
+python conversation_manager.py list
+
+run manage_conversations.py to save as text
+
+
+
+
+    python src/mood_tracker.py
+        python src/agent.py
+
+
+
+
+        python src\knowledge_uploader.py
+
+
+            python src/emotion_analysis.py conversations/YOUR_TRANSCRIPT_FILE.txt
+
+
+
+
+>>>>>>> 787b239a67e4f1f5d204f8fe6b5b6edcc491c2f4
     python demo_full_loop.py
